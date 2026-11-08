@@ -67,15 +67,7 @@
 
         <section class="mt-6 space-y-3">
             <h2 class="text-center text-xs uppercase tracking-[.22em] text-pink-200/60">Связаться с нами</h2>
-            <a class="contact-link" href="https://wa.me/79096695445" target="_blank" rel="noopener noreferrer">
-                <i class="fa-brands fa-whatsapp contact-icon"></i> WhatsApp
-            </a>
-            <a class="contact-link" href="https://t.me/+79096695445" target="_blank" rel="noopener noreferrer">
-                <i class="fa-brands fa-telegram contact-icon"></i> Telegram
-            </a>
-            <a class="contact-link" href="tel:+79096695445">
-                <i class="fa-solid fa-phone contact-icon"></i> +7 (909) 669-54-45
-            </a>
+            <!-- CONTACTS_PLACEHOLDER -->
         </section>
     </div>
     <footer class="max-w-md mx-auto mt-8 text-center text-[10px] text-pink-100/40">Дистанционная продажа никотинсодержащей продукции не осуществляется. 18+</footer>
@@ -109,35 +101,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
     <script>
-        // Чистим динамические кнопки, которые сервер подставляет в BUTTONS_PLACEHOLDER.
-        const unwantedLabels = ['вконтакте', 'vk', 'карта постоянного гостя', 'постоянного гостя', 'loyalty'];
-        const normalizeText = (value) => (value || '').toLowerCase().replace(/ё/g, 'е').trim();
-
-        document.querySelectorAll('#shopButtons a, #shopButtons button').forEach((link) => {
-            const label = normalizeText(link.innerText || link.getAttribute('aria-label'));
-            const href = normalizeText(link.getAttribute('href'));
-            if (unwantedLabels.some((item) => label.includes(item)) || href.includes('vk.com') || href.includes('vkontakte')) {
-                link.remove();
-            }
-        });
-
-        // Если сервер добавил второй заголовок контактов внутрь динамического блока,
-        // удаляем его: ниже остаётся один общий блок «Связаться с нами».
-        document.querySelectorAll('#shopButtons h1, #shopButtons h2, #shopButtons h3, #shopButtons h4, #shopButtons p, #shopButtons div').forEach((element) => {
-            if (normalizeText(element.textContent) === 'связаться с нами') element.remove();
-        });
-
-        // Исправляем контакты в кнопках, которые сервер подставляет в BUTTONS_PLACEHOLDER.
-        document.querySelectorAll('a').forEach((link) => {
-            const label = (link.innerText || link.getAttribute('aria-label') || '').toLowerCase();
-            if (label.includes('whatsapp') || label.includes('ватсап')) {
-                link.href = 'https://wa.me/79096695445'; link.target = '_blank'; link.rel = 'noopener noreferrer';
-            } else if (label.includes('telegram') || label.includes('телеграм')) {
-                link.href = 'https://t.me/+79096695445'; link.target = '_blank'; link.rel = 'noopener noreferrer';
-            } else if (label.includes('телефон') || label.includes('позвон') || label.includes('phone')) {
-                link.href = 'tel:+79096695445';
-            }
-        });
         new Swiper(".mySwiper", { autoplay: { delay: 3500 }, pagination: { el: ".swiper-pagination" }, loop: true });
         if (localStorage.getItem('age_verified') === 'true') document.getElementById('ageGate').style.display = 'none';
         function confirmAge() { localStorage.setItem('age_verified', 'true'); document.getElementById('ageGate').style.display = 'none'; }
