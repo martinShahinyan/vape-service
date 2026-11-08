@@ -16,10 +16,14 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 TMP_DIR = tempfile.gettempdir()
 DB_PATH = os.path.join(TMP_DIR, "database.db")
 UPLOADS_DIR = os.path.join(TMP_DIR, "uploads")
+STATIC_DIR = os.path.join(BASE_DIR, "static")
 os.makedirs(UPLOADS_DIR, exist_ok=True)
 
 app = FastAPI(title="Vape Hub")
 app.mount("/uploads", StaticFiles(directory=UPLOADS_DIR), name="uploads")
+# Здесь лежит logo.png (static/logo.png)
+if os.path.isdir(STATIC_DIR):
+    app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 # Хранилище S3 (необязательно): без ключей всё работает во временной папке
 S3_BUCKET = os.getenv("S3_BUCKET", "vape-hub-storage")
@@ -114,14 +118,19 @@ SHOP_CONFIG = {
     "logo": "https://cdn-icons-png.flaticon.com/512/3076/3076045.png",
     "yandex_review_url": "https://yandex.ru/maps",
     "twogis_review_url": "https://2gis.ru/moscow",
+    # Основные кнопки под баннером
     "links": {
         "telegram_catalog": {"title": "💨 Наличие и вкусы (Telegram)", "url": "https://t.me", "icon": "fa-brands fa-telegram"},
-        "loyalty": {"title": "💳 Карта постоянного гостя", "url": "https://t.me", "icon": "fa-solid fa-id-card"},
-        "whatsapp": {"title": "💬 Написать в WhatsApp", "url": "https://wa.me/79000000000", "icon": "fa-brands fa-whatsapp"},
-        "vk": {"title": "📘 Сообщество ВКонтакте", "url": "https://vk.com", "icon": "fa-brands fa-vk"},
-        "phone": {"title": "📞 Позвонить в магазин", "url": "tel:+79000000000", "icon": "fa-solid fa-phone"},
+    },
+    # Блок «Связаться с нами» — единственное место, где живут контакты
+    "contacts": {
+        "whatsapp": {"title": "WhatsApp", "url": "https://wa.me/79096695445", "icon": "fa-brands fa-whatsapp"},
+        "telegram": {"title": "Telegram", "url": "https://t.me/+79096695445", "icon": "fa-brands fa-telegram"},
+        "phone": {"title": "+7 (909) 669-54-45", "url": "tel:+79096695445", "icon": "fa-solid fa-phone"},
     },
 }
+# Все ссылки, по которым считаются клики через /go/<key>
+ALL_LINKS = {**SHOP_CONFIG["links"], **SHOP_CONFIG["contacts"]}
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -156,7 +165,15 @@ async def landing_page(src: str = "direct"):
         buttons_html += f'''
         <a href="/go/{key}" class="glass flex items-center justify-between p-4 rounded-2xl hover:bg-slate-800/80 active:scale-98 transition">
             <span class="font-medium text-sm">{item["title"]}</span>
-            <i class="{item["icon"]} text-lg text-emerald-400"></i>
+            <i class="{item["icon"]} text-lg text-pink-400"></i>
+        </a>
+        '''
+
+    contacts_html = ""
+    for key, item in SHOP_CONFIG["contacts"].items():
+        contacts_html += f'''
+        <a class="contact-link" href="/go/{key}">
+            <i class="{item["icon"]} contact-icon"></i> {item["title"]}
         </a>
         '''
 
@@ -166,12 +183,13 @@ async def landing_page(src: str = "direct"):
     page = page.replace("{{ shop.logo }}", SHOP_CONFIG["logo"])
     page = page.replace("<!-- BANNERS_PLACEHOLDER -->", banners_html)
     page = page.replace("<!-- BUTTONS_PLACEHOLDER -->", buttons_html)
+    page = page.replace("<!-- CONTACTS_PLACEHOLDER -->", contacts_html)
     return HTMLResponse(content=page)
 
 
 @app.get("/go/{btn_key}")
 async def track_click(btn_key: str):
-    if btn_key not in SHOP_CONFIG["links"]:
+    if btn_key not in ALL_LINKS:
         raise HTTPException(status_code=404, detail="Не найдено")
     download_db()
     conn = sqlite3.connect(DB_PATH)
@@ -180,7 +198,7 @@ async def track_click(btn_key: str):
     conn.commit()
     conn.close()
     upload_db()
-    return RedirectResponse(url=SHOP_CONFIG["links"][btn_key]["url"], status_code=303)
+    return RedirectResponse(url=ALL_LINKS[btn_key]["url"], status_code=303)
 
 
 @app.post("/api/review")
