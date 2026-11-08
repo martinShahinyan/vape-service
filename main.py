@@ -17,10 +17,8 @@ DB_PATH = os.path.join(TMP_DIR, "database.db")
 UPLOADS_DIR = os.path.join(TMP_DIR, "uploads")
 os.makedirs(UPLOADS_DIR, exist_ok=True)
 
-# 2. FastAPI հավելվածի ստեղծում
-app = FastAPI(title="Vape Hub Serverless")
 
-# 3. Կցում ենք static files-ը
+app = FastAPI(title="Vape Hub Serverless")
 app.mount("/uploads", StaticFiles(directory=UPLOADS_DIR), name="uploads")
 
 # 4. S3 Կարգավորումներ
@@ -337,5 +335,3 @@ async def delete_banner(banner_id: int, pwd: str = Form(...)):
 
     return RedirectResponse(url=f"/admin?pwd={pwd}", status_code=303)
 
-# Yandex Cloud Function Handler
-handler = Mangum(app)
