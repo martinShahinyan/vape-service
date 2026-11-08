@@ -45,8 +45,7 @@
     </div>
     <div class="w-full max-w-md mx-auto">
         <header class="text-center mb-6 pt-2">
-            <img src="/static/logo.png" alt="Дымный выбор" class="w-full max-w-[300px] h-auto mx-auto mb-3 drop-shadow-[0_12px_28px_rgba(242,11,120,0.18)]">
-            <h1 class="text-2xl font-extrabold tracking-wide text-pink-100">Дымный выбор</h1>
+            <img src="/static/logo.png" alt="Логотип сети магазинов Дымный выбор" class="block w-full max-w-[280px] h-auto mx-auto mb-3 object-contain drop-shadow-[0_12px_28px_rgba(242,11,120,0.18)]">
             <p class="text-xs text-pink-200/60 mt-1">{{ shop.subtitle }}</p>
         </header>
 
@@ -110,14 +109,22 @@
 
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
     <script>
-        // Убираем ненужные разделы, которые сервер может подставлять в BUTTONS_PLACEHOLDER.
+        // Чистим динамические кнопки, которые сервер подставляет в BUTTONS_PLACEHOLDER.
         const unwantedLabels = ['вконтакте', 'vk', 'карта постоянного гостя', 'постоянного гостя', 'loyalty'];
+        const normalizeText = (value) => (value || '').toLowerCase().replace(/ё/g, 'е').trim();
+
         document.querySelectorAll('#shopButtons a, #shopButtons button').forEach((link) => {
-            const label = (link.innerText || link.getAttribute('aria-label') || '').toLowerCase().replace(/ё/g, 'е');
-            const href = (link.getAttribute('href') || '').toLowerCase();
+            const label = normalizeText(link.innerText || link.getAttribute('aria-label'));
+            const href = normalizeText(link.getAttribute('href'));
             if (unwantedLabels.some((item) => label.includes(item)) || href.includes('vk.com') || href.includes('vkontakte')) {
                 link.remove();
             }
+        });
+
+        // Если сервер добавил второй заголовок контактов внутрь динамического блока,
+        // удаляем его: ниже остаётся один общий блок «Связаться с нами».
+        document.querySelectorAll('#shopButtons h1, #shopButtons h2, #shopButtons h3, #shopButtons h4, #shopButtons p, #shopButtons div').forEach((element) => {
+            if (normalizeText(element.textContent) === 'связаться с нами') element.remove();
         });
 
         // Исправляем контакты в кнопках, которые сервер подставляет в BUTTONS_PLACEHOLDER.
