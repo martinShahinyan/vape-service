@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Панель управления — Статистика</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css">
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen p-4 sm:p-6">
+    <div class="max-w-6xl mx-auto space-y-6">
+        <div class="flex justify-between items-center bg-slate-900 p-5 rounded-2xl border border-slate-800">
+            <div>
+                <h1 class="text-xl font-bold text-emerald-400">📊 Панель управления Smart Stand</h1>
+                <p class="text-xs text-slate-400">Аналитика NFC / QR и отзывы</p>
+            </div>
+            <a href="/" target="_blank" class="px-4 py-2 bg-slate-800 rounded-xl text-xs hover:bg-slate-700">Открыть сайт ↗</a>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800">
+                <h2 class="text-base font-bold mb-4">📱 Источники переходов (NFC vs QR)</h2>
+                <div class="h-56 flex items-center justify-center"><canvas id="visitChart"></canvas></div>
+            </div>
+            <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800">
+                <h2 class="text-base font-bold mb-4">🔥 Клики по разделам</h2>
+                <div class="h-56"><canvas id="clickChart"></canvas></div>
+            </div>
+        </div>
+        <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800">
+            <h2 class="text-base font-bold mb-4 text-amber-400">🛡️ Внутренние отзывы (1-3 звезды)</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm">
+                    <thead class="text-xs text-slate-400 border-b border-slate-800">
+                        <tr>
+                            <th class="py-2 px-3">Дата</th>
+                            <th class="py-2 px-3">Оценка</th>
+                            <th class="py-2 px-3">Сообщение</th>
+                            <th class="py-2 px-3">Телефон</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-800">
+                        <!-- FEEDBACKS_PLACEHOLDER -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800">
+            <h2 class="text-base font-bold mb-4">🖼️ Баннеры на главной</h2>
+           <form action="/admin/banner/add" method="post" enctype="multipart/form-data" class="grid grid-cols-1 sm:grid-cols-5 gap-3 mb-6">
+    <input type="hidden" name="pwd" value="{{ pwd }}">
+    <input type="text" name="title" required placeholder="Заголовок" class="p-2 rounded bg-slate-950 border border-slate-700 text-xs">
+    
+    <!-- Ֆայլ ընտրել համակարգչից -->
+    <input type="file" name="image_file" accept="image/*" class="p-1 rounded bg-slate-950 border border-slate-700 text-xs file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:bg-slate-800 file:text-slate-200">
+    
+    <!-- Կամ գրել URL -->
+    <input type="url" name="image_url" placeholder="Или URL картинки" class="p-2 rounded bg-slate-950 border border-slate-700 text-xs">
+    
+    <input type="url" name="target_url" required placeholder="URL перехода" class="p-2 rounded bg-slate-950 border border-slate-700 text-xs">
+    <button type="submit" class="bg-emerald-600 rounded font-bold text-xs p-2 text-white">+ Добавить</button>
+</form>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <!-- BANNERS_ADMIN_PLACEHOLDER -->
+            </div>
+        </div>
+    </div>
+    <script>
+       const qrVsNfc = JSON.parse('{{ qr_vs_nfc | tojson }}');
+const clickCounts = JSON.parse('{{ click_counts | tojson }}');
+        const labelMap = {'telegram_catalog': 'Каталог', 'loyalty': 'Карта', 'whatsapp': 'WhatsApp', 'vk': 'VK', 'phone': 'Телефон', 'positive_review_5star': 'Отзыв 5★'};
+        new Chart(document.getElementById('visitChart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['NFC Касание', 'QR Сканирование', 'Прямой переход'],
+                datasets: [{ data: [qrVsNfc.nfc, qrVsNfc.qr, qrVsNfc.direct], backgroundColor: ['#a855f7', '#10b981', '#64748b'] }]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+        new Chart(document.getElementById('clickChart'), {
+            type: 'bar',
+            data: {
+                labels: Object.keys(clickCounts).map(k => labelMap[k] || k),
+                datasets: [{ label: 'Клики', data: Object.values(clickCounts), backgroundColor: '#38bdf8' }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+        });
+    </script>
+</body>
+</html>

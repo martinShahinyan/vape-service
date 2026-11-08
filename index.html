@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ shop.name }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+    <style>
+        body { background: radial-gradient(circle at top, #1e1b4b, #090d16); color: #f8fafc; font-family: system-ui, sans-serif; }
+        .glass { background: rgba(30, 41, 59, 0.75); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.08); }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between py-6 px-4">
+    <div id="ageGate" class="fixed inset-0 bg-slate-950/95 z-50 flex items-center justify-center p-4">
+        <div class="glass max-w-sm w-full p-6 rounded-3xl text-center border border-red-500/30">
+            <div class="w-14 h-14 rounded-full bg-red-500/20 text-red-400 flex items-center justify-center mx-auto mb-3 text-xl font-black">18+</div>
+            <h2 class="text-lg font-bold mb-2">Подтвердите возраст</h2>
+            <p class="text-xs text-slate-400 mb-6">Информация предназначена исключительно для совершеннолетних (18+).</p>
+            <button onclick="confirmAge()" class="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 font-bold text-sm transition">Мне исполнилось 18 лет</button>
+        </div>
+    </div>
+    <div class="w-full max-w-md mx-auto">
+        <div class="text-center mb-5">
+            <img src="{{ shop.logo }}" class="w-20 h-20 mx-auto rounded-full p-2 glass shadow-lg mb-3">
+            <h1 class="text-2xl font-extrabold text-white">{{ shop.name }}</h1>
+            <p class="text-xs text-slate-400 mt-1">{{ shop.subtitle }}</p>
+        </div>
+
+        <div class="swiper mySwiper rounded-2xl overflow-hidden mb-6 shadow-xl border border-white/10">
+            <div class="swiper-wrapper">
+                <!-- BANNERS_PLACEHOLDER -->
+            </div>
+            <div class="swiper-pagination"></div>
+        </div>
+
+        <button onclick="openReviewModal()" class="w-full mb-4 p-4 rounded-2xl bg-gradient-to-r from-red-600 to-amber-600 text-white font-bold flex items-center justify-between shadow-lg active:scale-95 transition">
+            <span class="flex items-center gap-3"><i class="fa-solid fa-location-dot text-xl"></i> Оценить магазин</span>
+            <span class="text-yellow-200 tracking-widest text-sm">★★★★★</span>
+        </button>
+
+        <div class="space-y-3">
+            <!-- BUTTONS_PLACEHOLDER -->
+        </div>
+    </div>
+    <footer class="max-w-md mx-auto mt-8 text-center text-[10px] text-slate-500">Дистанционная продажа никотинсодержащей продукции не осуществляется. 18+</footer>
+
+    <div id="reviewModal" class="fixed inset-0 bg-black/85 hidden items-center justify-center p-4 z-40">
+        <div class="glass w-full max-w-sm rounded-3xl p-6 text-center relative">
+            <button onclick="closeReviewModal()" class="absolute top-4 right-4 text-slate-400"><i class="fa-solid fa-xmark text-xl"></i></button>
+            <h3 class="text-lg font-bold mb-1">Оцените обслуживание</h3>
+            <p class="text-xs text-slate-300 mb-4">Нам важно ваше мнение</p>
+            <div class="flex justify-center gap-2 text-3xl text-slate-600 mb-5" id="starContainer">
+                <i class="fa-solid fa-star cursor-pointer" onclick="selectStar(1)"></i>
+                <i class="fa-solid fa-star cursor-pointer" onclick="selectStar(2)"></i>
+                <i class="fa-solid fa-star cursor-pointer" onclick="selectStar(3)"></i>
+                <i class="fa-solid fa-star cursor-pointer" onclick="selectStar(4)"></i>
+                <i class="fa-solid fa-star cursor-pointer" onclick="selectStar(5)"></i>
+            </div>
+            <div id="mapLinks" class="hidden space-y-3">
+                <p class="text-xs text-emerald-400 mb-2">Спасибо за высокую оценку! Выберите сервис:</p>
+                <a id="yandexBtn" href="#" target="_blank" class="block w-full py-3 rounded-xl bg-red-600 font-bold text-sm text-white">📍 Яндекс Карты</a>
+                <a id="twogisBtn" href="#" target="_blank" class="block w-full py-3 rounded-xl bg-emerald-600 font-bold text-sm text-white">🗺️ 2ГИС</a>
+            </div>
+            <form id="feedbackForm" class="hidden space-y-3 text-left" onsubmit="submitReview(event)">
+                <p class="text-xs text-amber-400 text-center">Напишите руководству, и мы решим проблему:</p>
+                <textarea name="comment" required placeholder="Что вам не понравилось?..." class="w-full p-3 rounded-xl bg-slate-900 border border-slate-700 text-sm text-white"></textarea>
+                <input type="tel" name="phone" required placeholder="Телефон для обратной связи" class="w-full p-3 rounded-xl bg-slate-900 border border-slate-700 text-sm text-white">
+                <button type="submit" class="w-full py-3 rounded-xl bg-purple-600 font-bold text-sm text-white">Отправить</button>
+            </form>
+            <div id="thankYouMsg" class="hidden text-emerald-400 text-sm font-medium py-3"></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+    <script>
+        new Swiper(".mySwiper", { autoplay: { delay: 3500 }, pagination: { el: ".swiper-pagination" }, loop: true });
+        if (localStorage.getItem('age_verified') === 'true') document.getElementById('ageGate').style.display = 'none';
+        function confirmAge() { localStorage.setItem('age_verified', 'true'); document.getElementById('ageGate').style.display = 'none'; }
+        let currentRating = 0;
+        function openReviewModal() { document.getElementById('reviewModal').classList.replace('hidden', 'flex'); }
+        function closeReviewModal() { document.getElementById('reviewModal').classList.replace('flex', 'hidden'); }
+        async function selectStar(rating) {
+            currentRating = rating;
+            const stars = document.querySelectorAll('#starContainer i');
+            stars.forEach((s, idx) => s.style.color = idx < rating ? '#fbbf24' : '#475569');
+            if (rating >= 4) {
+                document.getElementById('feedbackForm').classList.add('hidden');
+                const formData = new FormData();
+                formData.append('rating', rating);
+                const res = await fetch('/api/review', { method: 'POST', body: formData });
+                const data = await res.json();
+                if (data.action === 'choose_map') {
+                    document.getElementById('yandexBtn').href = data.yandex_url;
+                    document.getElementById('twogisBtn').href = data.twogis_url;
+                    document.getElementById('mapLinks').classList.remove('hidden');
+                }
+            } else {
+                document.getElementById('mapLinks').classList.add('hidden');
+                document.getElementById('feedbackForm').classList.remove('hidden');
+            }
+        }
+        async function submitReview(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            formData.append('rating', currentRating);
+            const res = await fetch('/api/review', { method: 'POST', body: formData });
+            const data = await res.json();
+            document.getElementById('feedbackForm').classList.add('hidden');
+            const msgBox = document.getElementById('thankYouMsg');
+            msgBox.innerText = data.message;
+            msgBox.classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
