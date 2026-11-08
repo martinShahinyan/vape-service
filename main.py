@@ -1,3 +1,4 @@
+import base64
 import json
 import os
 import shutil
@@ -33,6 +34,21 @@ S3_ENDPOINT = "https://storage.yandexcloud.net"
 
 # Пароль админки берётся из переменной окружения ADMIN_PWD
 ADMIN_PWD = os.getenv("ADMIN_PWD") or "unset-" + uuid.uuid4().hex
+
+# Баннер по умолчанию: встроенный SVG, не зависит от внешних сайтов (Unsplash и т.п.)
+DEFAULT_BANNER_SVG = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 320" preserveAspectRatio="xMidYMid slice">
+<defs>
+<linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1a0a14"/><stop offset="1" stop-color="#050505"/></linearGradient>
+<radialGradient id="g1" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#f20b78" stop-opacity=".75"/><stop offset="1" stop-color="#f20b78" stop-opacity="0"/></radialGradient>
+<radialGradient id="g2" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#ff5b9f" stop-opacity=".5"/><stop offset="1" stop-color="#ff5b9f" stop-opacity="0"/></radialGradient>
+</defs>
+<rect width="800" height="320" fill="url(#bg)"/>
+<circle cx="620" cy="90" r="190" fill="url(#g1)"/>
+<circle cx="180" cy="230" r="150" fill="url(#g2)"/>
+<circle cx="420" cy="40" r="90" fill="url(#g2)"/>
+</svg>"""
+DEFAULT_BANNER_URL = "data:image/svg+xml;base64," + base64.b64encode(DEFAULT_BANNER_SVG.encode("utf-8")).decode("ascii")
+DEAD_BANNER_MARK = "images.unsplash.com/photo-1560913210"
 
 
 def read_template(name):
@@ -103,10 +119,10 @@ def init_local_db():
     ''')
     cursor.execute("SELECT COUNT(*) FROM banners")
     if cursor.fetchone()[0] == 0:
-        cursor.execute('''
-            INSERT INTO banners (title, image_url, target_url)
-            VALUES ('Новинки Waka и HQD', 'https://images.unsplash.com/photo-1560913210-91e811632701?auto=format&fit=crop&w=800&q=80', 'https://t.me')
-        ''')
+        cursor.execute(
+            "INSERT INTO banners (title, image_url, target_url) VALUES (?, ?, ?)",
+            ("Новинки Waka и HQD", DEFAULT_BANNER_URL, "https://t.me"),
+        )
     conn.commit()
     conn.close()
     upload_db()
@@ -141,6 +157,11 @@ async def landing_page(src: str = "direct"):
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute("INSERT INTO analytics (event_type, source) VALUES (?, ?)", ("visit", source_clean))
+    # Чиним старую базу: заменяем удалённую картинку Unsplash на встроенный баннер
+    cursor.execute(
+        "UPDATE banners SET image_url = ? WHERE image_url LIKE ?",
+        (DEFAULT_BANNER_URL, f"%{DEAD_BANNER_MARK}%"),
+    )
     conn.commit()
     cursor.execute("SELECT id, title, image_url, target_url FROM banners WHERE is_active = 1")
     rows = cursor.fetchall()
