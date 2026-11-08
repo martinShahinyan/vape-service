@@ -5,60 +5,68 @@ import sqlite3
 import tempfile
 import uuid
 from collections import Counter
+from html import escape
+
 import boto3
-from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
+from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
-from mangum import Mangum
 
-# 1. Ժամանակավոր պանակները սահմանում ենք ԱՄԵՆԱՍԿԶԲՈՒՄ
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 TMP_DIR = tempfile.gettempdir()
 DB_PATH = os.path.join(TMP_DIR, "database.db")
 UPLOADS_DIR = os.path.join(TMP_DIR, "uploads")
 os.makedirs(UPLOADS_DIR, exist_ok=True)
 
-
-app = FastAPI(title="Vape Hub Serverless")
+app = FastAPI(title="Vape Hub")
 app.mount("/uploads", StaticFiles(directory=UPLOADS_DIR), name="uploads")
 
-# 4. S3 Կարգավորումներ
+# Хранилище S3 (необязательно): без ключей всё работает во временной папке
 S3_BUCKET = os.getenv("S3_BUCKET", "vape-hub-storage")
 S3_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID", "")
 S3_SECRET = os.getenv("AWS_SECRET_ACCESS_KEY", "")
 S3_ENDPOINT = "https://storage.yandexcloud.net"
+
+# Пароль админки берётся из переменной окружения ADMIN_PWD
 ADMIN_PWD = os.getenv("ADMIN_PWD") or "unset-" + uuid.uuid4().hex
 
-TEMPLATES_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates")
 
-# S3 Client
+def read_template(name):
+    for folder in (os.path.join(BASE_DIR, "templates"), BASE_DIR):
+        path = os.path.join(folder, name)
+        if os.path.exists(path):
+            with open(path, "r", encoding="utf-8") as f:
+                return f.read()
+    raise HTTPException(status_code=500, detail="Шаблон не найден: " + name)
+
+
 def get_s3_client():
     return boto3.client(
         "s3",
-        region_name="ru-central1",
         endpoint_url=S3_ENDPOINT,
+        region_name="ru-central1",
         aws_access_key_id=S3_KEY_ID,
-        aws_secret_access_key=S3_SECRET
+        aws_secret_access_key=S3_SECRET,
     )
 
+
 def download_db():
-    """Ներբեռնում է database.db-ն S3-ից դեպի /tmp"""
     if not os.path.exists(DB_PATH) and S3_KEY_ID:
         try:
-            s3 = get_s3_client()
-            s3.download_file(S3_BUCKET, "database.db", DB_PATH)
+            get_s3_client().download_file(S3_BUCKET, "database.db", DB_PATH)
         except Exception:
             init_local_db()
     elif not os.path.exists(DB_PATH):
         init_local_db()
 
+
 def upload_db():
-    """Պահպանում է թարմացված database.db-ն S3-ում"""
     if S3_KEY_ID:
         try:
-            s3 = get_s3_client()
-            s3.upload_file(DB_PATH, S3_BUCKET, "database.db")
+            get_s3_client().upload_file(DB_PATH, S3_BUCKET, "database.db")
         except Exception as e:
             print(f"S3 DB upload error: {e}")
+
 
 def init_local_db():
     conn = sqlite3.connect(DB_PATH)
@@ -92,12 +100,13 @@ def init_local_db():
     cursor.execute("SELECT COUNT(*) FROM banners")
     if cursor.fetchone()[0] == 0:
         cursor.execute('''
-            INSERT INTO banners (title, image_url, target_url) 
+            INSERT INTO banners (title, image_url, target_url)
             VALUES ('Новинки Waka и HQD', 'https://images.unsplash.com/photo-1560913210-91e811632701?auto=format&fit=crop&w=800&q=80', 'https://t.me')
         ''')
     conn.commit()
     conn.close()
     upload_db()
+
 
 SHOP_CONFIG = {
     "name": "SMOKE LAB MOSCOW",
@@ -110,15 +119,16 @@ SHOP_CONFIG = {
         "loyalty": {"title": "💳 Карта постоянного гостя", "url": "https://t.me", "icon": "fa-solid fa-id-card"},
         "whatsapp": {"title": "💬 Написать в WhatsApp", "url": "https://wa.me/79000000000", "icon": "fa-brands fa-whatsapp"},
         "vk": {"title": "📘 Сообщество ВКонтакте", "url": "https://vk.com", "icon": "fa-brands fa-vk"},
-        "phone": {"title": "📞 Позвонить в магазин", "url": "tel:+79000000000", "icon": "fa-solid fa-phone"}
-    }
+        "phone": {"title": "📞 Позвонить в магазин", "url": "tel:+79000000000", "icon": "fa-solid fa-phone"},
+    },
 }
+
 
 @app.get("/", response_class=HTMLResponse)
 async def landing_page(src: str = "direct"):
     download_db()
     source_clean = src.lower() if src.lower() in ["nfc", "qr"] else "direct"
-    
+
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute("INSERT INTO analytics (event_type, source) VALUES (?, ?)", ("visit", source_clean))
@@ -132,10 +142,10 @@ async def landing_page(src: str = "direct"):
     for r in rows:
         banners_html += f'''
         <div class="swiper-slide relative">
-            <a href="{r[3]}" target="_blank">
-                <img src="{r[2]}" class="w-full h-40 object-cover">
+            <a href="{escape(str(r[3]), quote=True)}" target="_blank">
+                <img src="{escape(str(r[2]), quote=True)}" class="w-full h-40 object-cover">
                 <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end p-4">
-                    <span class="text-sm font-bold text-white">{r[1]}</span>
+                    <span class="text-sm font-bold text-white">{escape(str(r[1]))}</span>
                 </div>
             </a>
         </div>
@@ -150,22 +160,19 @@ async def landing_page(src: str = "direct"):
         </a>
         '''
 
-    with open(os.path.join(TEMPLATES_DIR, "index.html"), "r", encoding="utf-8") as f:
-        html = f.read()
+    page = read_template("index.html")
+    page = page.replace("{{ shop.name }}", SHOP_CONFIG["name"])
+    page = page.replace("{{ shop.subtitle }}", SHOP_CONFIG["subtitle"])
+    page = page.replace("{{ shop.logo }}", SHOP_CONFIG["logo"])
+    page = page.replace("<!-- BANNERS_PLACEHOLDER -->", banners_html)
+    page = page.replace("<!-- BUTTONS_PLACEHOLDER -->", buttons_html)
+    return HTMLResponse(content=page)
 
-    html = html.replace("{{ shop.name }}", SHOP_CONFIG["name"])
-    html = html.replace("{{ shop.subtitle }}", SHOP_CONFIG["subtitle"])
-    html = html.replace("{{ shop.logo }}", SHOP_CONFIG["logo"])
-    html = html.replace("<!-- BANNERS_PLACEHOLDER -->", banners_html)
-    html = html.replace("<!-- BUTTONS_PLACEHOLDER -->", buttons_html)
-
-    return HTMLResponse(content=html)
 
 @app.get("/go/{btn_key}")
 async def track_click(btn_key: str):
     if btn_key not in SHOP_CONFIG["links"]:
         raise HTTPException(status_code=404, detail="Не найдено")
-    
     download_db()
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
@@ -173,15 +180,14 @@ async def track_click(btn_key: str):
     conn.commit()
     conn.close()
     upload_db()
-
     return RedirectResponse(url=SHOP_CONFIG["links"][btn_key]["url"], status_code=303)
+
 
 @app.post("/api/review")
 async def handle_review(rating: int = Form(...), comment: str = Form(""), phone: str = Form("")):
     download_db()
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
-    
     if rating >= 4:
         cursor.execute("INSERT INTO analytics (event_type, source) VALUES (?, ?)", ("click", "positive_review_5star"))
         conn.commit()
@@ -190,27 +196,26 @@ async def handle_review(rating: int = Form(...), comment: str = Form(""), phone:
         return JSONResponse({
             "action": "choose_map",
             "yandex_url": SHOP_CONFIG["yandex_review_url"],
-            "twogis_url": SHOP_CONFIG["twogis_review_url"]
+            "twogis_url": SHOP_CONFIG["twogis_review_url"],
         })
-
     cursor.execute("INSERT INTO feedback (rating, comment, phone) VALUES (?, ?, ?)", (rating, comment, phone))
     conn.commit()
     conn.close()
     upload_db()
-
     return JSONResponse({"action": "thank_you", "message": "Спасибо! Ваше обращение передано руководству."})
+
 
 @app.get("/admin", response_class=HTMLResponse)
 async def admin_dashboard(pwd: str = ""):
-   if pwd != ADMIN_PWD:
+    if pwd != ADMIN_PWD:
         return HTMLResponse('''
-            <body style="background:#090d16;color:#fff;display:flex;justify-content:center;align-items:center;height:100vh;font-family:sans-serif;">
-                <form method="get" style="background:#1e293b;padding:30px;border-radius:16px;text-align:center;">
-                    <h3 style="margin-bottom:12px;">🔒 Вход в панель</h3>
-                    <input type="password" name="pwd" placeholder="Пароль" style="padding:8px;border-radius:6px;border:none;margin-bottom:12px;outline:none;"><br>
-                    <button type="submit" style="padding:8px 20px;background:#10b981;color:#fff;border:none;border-radius:6px;font-weight:bold;cursor:pointer;">Войти</button>
-                </form>
-            </body>
+        <body style="background:#090d16;color:#fff;display:flex;justify-content:center;align-items:center;height:100vh;font-family:sans-serif;">
+            <form method="get" style="background:#1e293b;padding:30px;border-radius:16px;text-align:center;">
+                <h3 style="margin-bottom:12px;">🔒 Вход в панель</h3>
+                <input type="password" name="pwd" placeholder="Пароль" style="padding:8px;border-radius:6px;border:none;margin-bottom:12px;outline:none;"><br>
+                <button type="submit" style="padding:8px 20px;background:#10b981;color:#fff;border:none;border-radius:6px;font-weight:bold;cursor:pointer;">Войти</button>
+            </form>
+        </body>
         ''')
 
     download_db()
@@ -226,18 +231,23 @@ async def admin_dashboard(pwd: str = ""):
 
     visits = [r[0] for r in analytics_rows if r[1] == "visit"]
     visit_counts = Counter(visits)
-    qr_vs_nfc = {"nfc": visit_counts.get("nfc", 0), "qr": visit_counts.get("qr", 0), "direct": visit_counts.get("direct", 0)}
+    qr_vs_nfc = {
+        "nfc": visit_counts.get("nfc", 0),
+        "qr": visit_counts.get("qr", 0),
+        "direct": visit_counts.get("direct", 0),
+    }
     clicks = [r[0] for r in analytics_rows if r[1] == "click"]
     click_counts = dict(Counter(clicks))
 
     feedbacks_html = ""
     for f in feedback_rows:
+        phone_safe = escape(str(f[3] or ""), quote=True)
         feedbacks_html += f'''
         <tr>
-            <td class="py-2.5 px-3 text-xs text-slate-400">{str(f[4])[:16].replace('T', ' ')}</td>
+            <td class="py-2.5 px-3 text-xs text-slate-400">{escape(str(f[4])[:16].replace('T', ' '))}</td>
             <td class="py-2.5 px-3 text-amber-400 font-bold">{f[1]} ★</td>
-            <td class="py-2.5 px-3 text-xs">{f[2]}</td>
-            <td class="py-2.5 px-3 text-xs"><a href="tel:{f[3]}" class="text-emerald-400 underline">{f[3]}</a></td>
+            <td class="py-2.5 px-3 text-xs">{escape(str(f[2] or ""))}</td>
+            <td class="py-2.5 px-3 text-xs"><a href="tel:{phone_safe}" class="text-emerald-400 underline">{phone_safe}</a></td>
         </tr>
         '''
     if not feedback_rows:
@@ -247,27 +257,25 @@ async def admin_dashboard(pwd: str = ""):
     for b in banner_rows:
         banners_admin_html += f'''
         <div class="bg-slate-950 rounded-xl overflow-hidden border border-slate-800">
-            <img src="{b[2]}" class="h-24 w-full object-cover">
+            <img src="{escape(str(b[2]), quote=True)}" class="h-24 w-full object-cover">
             <div class="p-2.5 flex justify-between items-center">
-                <span class="text-xs truncate font-medium">{b[1]}</span>
+                <span class="text-xs truncate font-medium">{escape(str(b[1]))}</span>
                 <form action="/admin/banner/delete/{b[0]}" method="post">
-                    <input type="hidden" name="pwd" value="{pwd}">
+                    <input type="hidden" name="pwd" value="{escape(pwd, quote=True)}">
                     <button class="text-red-400 text-xs hover:underline">Удалить</button>
                 </form>
             </div>
         </div>
         '''
 
-    with open(os.path.join(TEMPLATES_DIR, "dashboard.html"), "r", encoding="utf-8") as f:
-        html = f.read()
+    page = read_template("dashboard.html")
+    page = page.replace("{{ pwd }}", escape(pwd, quote=True))
+    page = page.replace("{{ qr_vs_nfc | tojson }}", json.dumps(qr_vs_nfc))
+    page = page.replace("{{ click_counts | tojson }}", json.dumps(click_counts))
+    page = page.replace("<!-- FEEDBACKS_PLACEHOLDER -->", feedbacks_html)
+    page = page.replace("<!-- BANNERS_ADMIN_PLACEHOLDER -->", banners_admin_html)
+    return HTMLResponse(content=page)
 
-    html = html.replace("{{ pwd }}", pwd)
-    html = html.replace("{{ qr_vs_nfc | tojson }}", json.dumps(qr_vs_nfc))
-    html = html.replace("{{ click_counts | tojson }}", json.dumps(click_counts))
-    html = html.replace("<!-- FEEDBACKS_PLACEHOLDER -->", feedbacks_html)
-    html = html.replace("<!-- BANNERS_ADMIN_PLACEHOLDER -->", banners_admin_html)
-
-    return HTMLResponse(content=html)
 
 @app.post("/admin/banner/add")
 async def add_banner(
@@ -275,56 +283,50 @@ async def add_banner(
     title: str = Form(...),
     target_url: str = Form(...),
     image_file: UploadFile = File(None),
-    image_url: str = Form("")
+    image_url: str = Form(""),
 ):
-   if pwd != ADMIN_PWD:
+    if pwd == ADMIN_PWD:
         final_image_url = image_url.strip() if image_url else ""
 
-        # Եթե ֆայլ է ընտրվել համակարգչից
         if image_file and image_file.filename:
             ext = os.path.splitext(image_file.filename)[1]
             new_filename = f"{uuid.uuid4().hex}{ext}"
 
-            # 1. Եթե կան S3 բանալիներ (Yandex Cloud)
             if S3_KEY_ID:
                 try:
-                    s3 = get_s3_client()
-                    s3.upload_fileobj(
+                    get_s3_client().upload_fileobj(
                         image_file.file,
                         S3_BUCKET,
                         f"banners/{new_filename}",
-                        ExtraArgs={"ACL": "public-read", "ContentType": image_file.content_type or "image/jpeg"}
+                        ExtraArgs={"ACL": "public-read", "ContentType": image_file.content_type or "image/jpeg"},
                     )
                     final_image_url = f"{S3_ENDPOINT}/{S3_BUCKET}/banners/{new_filename}"
                 except Exception as e:
                     print(f"S3 Error: {e}")
-            
-            # 2. Եթե չկան S3 բանալիներ (տեղական փորձարկում քո համակարգչում)
-           # 2. Եթե չկան S3 բանալիներ
+
             if not final_image_url:
                 local_path = os.path.join(UPLOADS_DIR, new_filename)
                 with open(local_path, "wb+") as f_out:
                     shutil.copyfileobj(image_file.file, f_out)
                 final_image_url = f"/uploads/{new_filename}"
 
-        # Բազայում պահպանում
         if final_image_url:
             download_db()
             conn = sqlite3.connect(DB_PATH)
             cursor = conn.cursor()
             cursor.execute(
                 "INSERT INTO banners (title, image_url, target_url) VALUES (?, ?, ?)",
-                (title, final_image_url, target_url)
+                (title, final_image_url, target_url),
             )
             conn.commit()
             conn.close()
             upload_db()
-
     return RedirectResponse(url=f"/admin?pwd={pwd}", status_code=303)
+
 
 @app.post("/admin/banner/delete/{banner_id}")
 async def delete_banner(banner_id: int, pwd: str = Form(...)):
-    if pwd != ADMIN_PWD:
+    if pwd == ADMIN_PWD:
         download_db()
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
@@ -332,6 +334,4 @@ async def delete_banner(banner_id: int, pwd: str = Form(...)):
         conn.commit()
         conn.close()
         upload_db()
-
     return RedirectResponse(url=f"/admin?pwd={pwd}", status_code=303)
-
