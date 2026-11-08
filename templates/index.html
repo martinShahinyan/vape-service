@@ -31,6 +31,15 @@
         }
         .contact-link:hover { background:rgba(242,11,120,.2); transform:translateY(-1px); }
         .contact-icon { color:#ff5b9f; font-size:1.15rem; }
+        .logo-frame {
+            width: 100%; max-width: 280px; padding: 2px; border-radius: 1.5rem;
+            background: linear-gradient(135deg, #ff5b9f, #f20b78 45%, rgba(255,91,159,.25));
+            box-shadow: 0 0 0 1px rgba(255,91,159,.15), 0 14px 40px rgba(242,11,120,.28);
+        }
+        .logo-inner {
+            border-radius: calc(1.5rem - 2px); padding: .9rem 1.1rem;
+            background: radial-gradient(ellipse at 50% 0%, rgba(242,11,120,.16), transparent 70%), #0b0509;
+        }
         .swiper-pagination-bullet-active { background:var(--brand) !important; }
     </style>
 </head>
@@ -45,7 +54,11 @@
     </div>
     <div class="w-full max-w-md mx-auto">
         <header class="text-center mb-6 pt-2">
-            <img src="/static/logo.png" alt="Логотип сети магазинов Дымный выбор" class="block w-full max-w-[280px] h-auto mx-auto mb-3 object-contain drop-shadow-[0_12px_28px_rgba(242,11,120,0.18)]">
+            <div class="logo-frame mx-auto mb-3">
+                <div class="logo-inner">
+                    <img src="/static/logo.png" alt="Логотип сети магазинов Дымный выбор" class="block w-full h-auto object-contain">
+                </div>
+            </div>
             <p class="text-xs text-pink-200/60 mt-1">{{ shop.subtitle }}</p>
         </header>
 
