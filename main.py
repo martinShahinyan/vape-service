@@ -28,6 +28,7 @@ S3_BUCKET = os.getenv("S3_BUCKET", "vape-hub-storage")
 S3_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID", "")
 S3_SECRET = os.getenv("AWS_SECRET_ACCESS_KEY", "")
 S3_ENDPOINT = "https://storage.yandexcloud.net"
+ADMIN_PWD = os.getenv("ADMIN_PWD") or "unset-" + uuid.uuid4().hex
 
 TEMPLATES_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates")
 
@@ -35,6 +36,7 @@ TEMPLATES_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "templa
 def get_s3_client():
     return boto3.client(
         "s3",
+        region_name="ru-central1",
         endpoint_url=S3_ENDPOINT,
         aws_access_key_id=S3_KEY_ID,
         aws_secret_access_key=S3_SECRET
@@ -202,7 +204,7 @@ async def handle_review(rating: int = Form(...), comment: str = Form(""), phone:
 
 @app.get("/admin", response_class=HTMLResponse)
 async def admin_dashboard(pwd: str = ""):
-    if pwd != "vape2026":
+   if pwd != ADMIN_PWD:
         return HTMLResponse('''
             <body style="background:#090d16;color:#fff;display:flex;justify-content:center;align-items:center;height:100vh;font-family:sans-serif;">
                 <form method="get" style="background:#1e293b;padding:30px;border-radius:16px;text-align:center;">
@@ -277,7 +279,7 @@ async def add_banner(
     image_file: UploadFile = File(None),
     image_url: str = Form("")
 ):
-    if pwd == "vape2026":
+   if pwd != ADMIN_PWD:
         final_image_url = image_url.strip() if image_url else ""
 
         # Եթե ֆայլ է ընտրվել համակարգչից
@@ -324,7 +326,7 @@ async def add_banner(
 
 @app.post("/admin/banner/delete/{banner_id}")
 async def delete_banner(banner_id: int, pwd: str = Form(...)):
-    if pwd == "vape2026":
+    if pwd != ADMIN_PWD:
         download_db()
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
