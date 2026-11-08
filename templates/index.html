@@ -3,48 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ shop.name }}</title>
+    <title>Дымный выбор</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
     <style>
-        body { background: radial-gradient(circle at top, #1e1b4b, #090d16); color: #f8fafc; font-family: system-ui, sans-serif; }
-        .glass { background: rgba(30, 41, 59, 0.75); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.08); }
+        :root { --brand: #f20b78; --brand-light: #ff5b9f; }
+        body {
+            background: radial-gradient(ellipse at 50% 0%, rgba(242,11,120,.20), transparent 48%), #050505;
+            color: #fff1f6; font-family: system-ui, sans-serif;
+        }
+        .glass {
+            background: rgba(25,12,23,.88); backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,91,159,.22);
+            box-shadow: 0 12px 40px rgba(0,0,0,.28);
+        }
+        .brand-button {
+            background: linear-gradient(135deg,#f20b78,#ff4b91); color: white;
+            box-shadow: 0 8px 24px rgba(242,11,120,.22);
+        }
+        .brand-button:hover { filter: brightness(1.1); }
+        .contact-link {
+            display:flex; align-items:center; justify-content:center; gap:.7rem;
+            width:100%; padding:.95rem 1rem; border-radius:1rem;
+            border:1px solid rgba(255,91,159,.28); background:rgba(242,11,120,.09);
+            color:#ffe5ef; font-weight:700; transition:.2s ease;
+        }
+        .contact-link:hover { background:rgba(242,11,120,.2); transform:translateY(-1px); }
+        .contact-icon { color:#ff5b9f; font-size:1.15rem; }
+        .swiper-pagination-bullet-active { background:var(--brand) !important; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col justify-between py-6 px-4">
     <div id="ageGate" class="fixed inset-0 bg-slate-950/95 z-50 flex items-center justify-center p-4">
-        <div class="glass max-w-sm w-full p-6 rounded-3xl text-center border border-red-500/30">
-            <div class="w-14 h-14 rounded-full bg-red-500/20 text-red-400 flex items-center justify-center mx-auto mb-3 text-xl font-black">18+</div>
+        <div class="glass max-w-sm w-full p-6 rounded-3xl text-center">
+            <div class="w-14 h-14 rounded-full bg-pink-500/15 text-pink-300 flex items-center justify-center mx-auto mb-3 text-xl font-black">18+</div>
             <h2 class="text-lg font-bold mb-2">Подтвердите возраст</h2>
             <p class="text-xs text-slate-400 mb-6">Информация предназначена исключительно для совершеннолетних (18+).</p>
-            <button onclick="confirmAge()" class="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 font-bold text-sm transition">Мне исполнилось 18 лет</button>
+            <button onclick="confirmAge()" class="w-full py-3 rounded-xl brand-button font-bold text-sm transition">Мне исполнилось 18 лет</button>
         </div>
     </div>
     <div class="w-full max-w-md mx-auto">
-        <div class="text-center mb-5">
-            <img src="{{ shop.logo }}" class="w-20 h-20 mx-auto rounded-full p-2 glass shadow-lg mb-3">
-            <h1 class="text-2xl font-extrabold text-white">{{ shop.name }}</h1>
-            <p class="text-xs text-slate-400 mt-1">{{ shop.subtitle }}</p>
-        </div>
+        <header class="text-center mb-6 pt-2">
+            <img src="/static/logo.png" alt="Дымный выбор" class="w-full max-w-[300px] h-auto mx-auto mb-3 drop-shadow-[0_12px_28px_rgba(242,11,120,0.18)]">
+            <h1 class="text-2xl font-extrabold tracking-wide text-pink-100">Дымный выбор</h1>
+            <p class="text-xs text-pink-200/60 mt-1">{{ shop.subtitle }}</p>
+        </header>
 
-        <div class="swiper mySwiper rounded-2xl overflow-hidden mb-6 shadow-xl border border-white/10">
+        <div class="swiper mySwiper rounded-2xl overflow-hidden mb-6 shadow-xl border border-pink-500/20">
             <div class="swiper-wrapper">
                 <!-- BANNERS_PLACEHOLDER -->
             </div>
             <div class="swiper-pagination"></div>
         </div>
 
-        <button onclick="openReviewModal()" class="w-full mb-4 p-4 rounded-2xl bg-gradient-to-r from-red-600 to-amber-600 text-white font-bold flex items-center justify-between shadow-lg active:scale-95 transition">
+        <button onclick="openReviewModal()" class="w-full mb-4 p-4 rounded-2xl brand-button text-white font-bold flex items-center justify-between shadow-lg active:scale-95 transition">
             <span class="flex items-center gap-3"><i class="fa-solid fa-location-dot text-xl"></i> Оценить магазин</span>
-            <span class="text-yellow-200 tracking-widest text-sm">★★★★★</span>
+            <span class="text-pink-100 tracking-widest text-sm">★★★★★</span>
         </button>
 
-        <div class="space-y-3">
+        <div id="shopButtons" class="space-y-3">
             <!-- BUTTONS_PLACEHOLDER -->
         </div>
+
+        <section class="mt-6 space-y-3">
+            <h2 class="text-center text-xs uppercase tracking-[.22em] text-pink-200/60">Связаться с нами</h2>
+            <a class="contact-link" href="https://wa.me/79096695445" target="_blank" rel="noopener noreferrer">
+                <i class="fa-brands fa-whatsapp contact-icon"></i> WhatsApp
+            </a>
+            <a class="contact-link" href="https://t.me/+79096695445" target="_blank" rel="noopener noreferrer">
+                <i class="fa-brands fa-telegram contact-icon"></i> Telegram
+            </a>
+            <a class="contact-link" href="tel:+79096695445">
+                <i class="fa-solid fa-phone contact-icon"></i> +7 (909) 669-54-45
+            </a>
+        </section>
     </div>
-    <footer class="max-w-md mx-auto mt-8 text-center text-[10px] text-slate-500">Дистанционная продажа никотинсодержащей продукции не осуществляется. 18+</footer>
+    <footer class="max-w-md mx-auto mt-8 text-center text-[10px] text-pink-100/40">Дистанционная продажа никотинсодержащей продукции не осуществляется. 18+</footer>
 
     <div id="reviewModal" class="fixed inset-0 bg-black/85 hidden items-center justify-center p-4 z-40">
         <div class="glass w-full max-w-sm rounded-3xl p-6 text-center relative">
@@ -59,15 +94,15 @@
                 <i class="fa-solid fa-star cursor-pointer" onclick="selectStar(5)"></i>
             </div>
             <div id="mapLinks" class="hidden space-y-3">
-                <p class="text-xs text-emerald-400 mb-2">Спасибо за высокую оценку! Выберите сервис:</p>
-                <a id="yandexBtn" href="#" target="_blank" class="block w-full py-3 rounded-xl bg-red-600 font-bold text-sm text-white">📍 Яндекс Карты</a>
-                <a id="twogisBtn" href="#" target="_blank" class="block w-full py-3 rounded-xl bg-emerald-600 font-bold text-sm text-white">🗺️ 2ГИС</a>
+                <p class="text-xs text-pink-300 mb-2">Спасибо за высокую оценку! Выберите сервис:</p>
+                <a id="yandexBtn" href="#" target="_blank" class="block w-full py-3 rounded-xl brand-button font-bold text-sm text-white">📍 Яндекс Карты</a>
+                <a id="twogisBtn" href="#" target="_blank" class="block w-full py-3 rounded-xl brand-button font-bold text-sm text-white">🗺️ 2ГИС</a>
             </div>
             <form id="feedbackForm" class="hidden space-y-3 text-left" onsubmit="submitReview(event)">
-                <p class="text-xs text-amber-400 text-center">Напишите руководству, и мы решим проблему:</p>
-                <textarea name="comment" required placeholder="Что вам не понравилось?..." class="w-full p-3 rounded-xl bg-slate-900 border border-slate-700 text-sm text-white"></textarea>
-                <input type="tel" name="phone" required placeholder="Телефон для обратной связи" class="w-full p-3 rounded-xl bg-slate-900 border border-slate-700 text-sm text-white">
-                <button type="submit" class="w-full py-3 rounded-xl bg-purple-600 font-bold text-sm text-white">Отправить</button>
+                <p class="text-xs text-pink-300 text-center">Напишите руководству, и мы решим проблему:</p>
+                <textarea name="comment" required placeholder="Что вам не понравилось?..." class="w-full p-3 rounded-xl bg-black border border-pink-500/25 text-sm text-white"></textarea>
+                <input type="tel" name="phone" required placeholder="Телефон для обратной связи" class="w-full p-3 rounded-xl bg-black border border-pink-500/25 text-sm text-white">
+                <button type="submit" class="w-full py-3 rounded-xl brand-button font-bold text-sm text-white">Отправить</button>
             </form>
             <div id="thankYouMsg" class="hidden text-emerald-400 text-sm font-medium py-3"></div>
         </div>
@@ -75,6 +110,27 @@
 
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
     <script>
+        // Убираем ненужные разделы, которые сервер может подставлять в BUTTONS_PLACEHOLDER.
+        const unwantedLabels = ['вконтакте', 'vk', 'карта постоянного гостя', 'постоянного гостя', 'loyalty'];
+        document.querySelectorAll('#shopButtons a, #shopButtons button').forEach((link) => {
+            const label = (link.innerText || link.getAttribute('aria-label') || '').toLowerCase().replace(/ё/g, 'е');
+            const href = (link.getAttribute('href') || '').toLowerCase();
+            if (unwantedLabels.some((item) => label.includes(item)) || href.includes('vk.com') || href.includes('vkontakte')) {
+                link.remove();
+            }
+        });
+
+        // Исправляем контакты в кнопках, которые сервер подставляет в BUTTONS_PLACEHOLDER.
+        document.querySelectorAll('a').forEach((link) => {
+            const label = (link.innerText || link.getAttribute('aria-label') || '').toLowerCase();
+            if (label.includes('whatsapp') || label.includes('ватсап')) {
+                link.href = 'https://wa.me/79096695445'; link.target = '_blank'; link.rel = 'noopener noreferrer';
+            } else if (label.includes('telegram') || label.includes('телеграм')) {
+                link.href = 'https://t.me/+79096695445'; link.target = '_blank'; link.rel = 'noopener noreferrer';
+            } else if (label.includes('телефон') || label.includes('позвон') || label.includes('phone')) {
+                link.href = 'tel:+79096695445';
+            }
+        });
         new Swiper(".mySwiper", { autoplay: { delay: 3500 }, pagination: { el: ".swiper-pagination" }, loop: true });
         if (localStorage.getItem('age_verified') === 'true') document.getElementById('ageGate').style.display = 'none';
         function confirmAge() { localStorage.setItem('age_verified', 'true'); document.getElementById('ageGate').style.display = 'none'; }
@@ -84,7 +140,7 @@
         async function selectStar(rating) {
             currentRating = rating;
             const stars = document.querySelectorAll('#starContainer i');
-            stars.forEach((s, idx) => s.style.color = idx < rating ? '#fbbf24' : '#475569');
+            stars.forEach((s, idx) => s.style.color = idx < rating ? '#ff5b9f' : '#694354');
             if (rating >= 4) {
                 document.getElementById('feedbackForm').classList.add('hidden');
                 const formData = new FormData();
