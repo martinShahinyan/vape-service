@@ -7,12 +7,22 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css">
+    <style>
+        body { background:radial-gradient(ellipse at top,rgba(242,11,120,.16),transparent 42%),#050505 !important; }
+        .bg-slate-900 { background-color:#190d18 !important; }
+        .bg-slate-950 { background-color:#050505 !important; }
+        .border-slate-800,.border-slate-700 { border-color:rgba(255,91,159,.22) !important; }
+        .text-emerald-400,.text-amber-400 { color:#ff5b9f !important; }
+        .bg-emerald-600 { background-color:#f20b78 !important; }
+        .bg-slate-800 { background-color:#35172b !important; }
+        input { accent-color:#f20b78; }
+    </style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen p-4 sm:p-6">
     <div class="max-w-6xl mx-auto space-y-6">
         <div class="flex justify-between items-center bg-slate-900 p-5 rounded-2xl border border-slate-800">
             <div>
-                <h1 class="text-xl font-bold text-emerald-400">📊 Панель управления Smart Stand</h1>
+                <h1 class="text-xl font-bold text-emerald-400">📊 Панель управления Дымный выбор</h1>
                 <p class="text-xs text-slate-400">Аналитика NFC / QR и отзывы</p>
             </div>
             <a href="/" target="_blank" class="px-4 py-2 bg-slate-800 rounded-xl text-xs hover:bg-slate-700">Открыть сайт ↗</a>
@@ -68,12 +78,15 @@
     <script>
        const qrVsNfc = JSON.parse('{{ qr_vs_nfc | tojson }}');
 const clickCounts = JSON.parse('{{ click_counts | tojson }}');
-        const labelMap = {'telegram_catalog': 'Каталог', 'loyalty': 'Карта', 'whatsapp': 'WhatsApp', 'vk': 'VK', 'phone': 'Телефон', 'positive_review_5star': 'Отзыв 5★'};
+        const labelMap = {'telegram_catalog': 'Каталог', 'whatsapp': 'WhatsApp', 'phone': 'Телефон', 'positive_review_5star': 'Отзыв 5★'};
+        // Не показываем статистику удалённых разделов.
+        delete clickCounts.loyalty;
+        delete clickCounts.vk;
         new Chart(document.getElementById('visitChart'), {
             type: 'doughnut',
             data: {
                 labels: ['NFC Касание', 'QR Сканирование', 'Прямой переход'],
-                datasets: [{ data: [qrVsNfc.nfc, qrVsNfc.qr, qrVsNfc.direct], backgroundColor: ['#a855f7', '#10b981', '#64748b'] }]
+                datasets: [{ data: [qrVsNfc.nfc, qrVsNfc.qr, qrVsNfc.direct], backgroundColor: ['#f20b78', '#ff5b9f', '#70445d'] }]
             },
             options: { responsive: true, maintainAspectRatio: false }
         });
@@ -81,7 +94,7 @@ const clickCounts = JSON.parse('{{ click_counts | tojson }}');
             type: 'bar',
             data: {
                 labels: Object.keys(clickCounts).map(k => labelMap[k] || k),
-                datasets: [{ label: 'Клики', data: Object.values(clickCounts), backgroundColor: '#38bdf8' }]
+                datasets: [{ label: 'Клики', data: Object.values(clickCounts), backgroundColor: '#f20b78' }]
             },
             options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
         });
