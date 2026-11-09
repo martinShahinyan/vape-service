@@ -132,7 +132,7 @@ SHOP_CONFIG = {
     "name": "SMOKE LAB MOSCOW",
     "subtitle": "Информационный портал для совершеннолетних (18+)",
     "logo": "https://cdn-icons-png.flaticon.com/512/3076/3076045.png",
-    "yandex_review_url": "https://yandex.ru/maps",
+    "yandex_review_url": "https://yandex.ru/maps/-/CXV-bM-a",
     "twogis_review_url": "https://2gis.ru/moscow",
     # Основные кнопки под баннером
     "links": {
