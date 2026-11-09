@@ -121,7 +121,7 @@ def init_local_db():
     if cursor.fetchone()[0] == 0:
         cursor.execute(
             "INSERT INTO banners (title, image_url, target_url) VALUES (?, ?, ?)",
-            ("Новинки Waka и HQD", DEFAULT_BANNER_URL, "https://t.me"),
+            ("Новинки Waka и HQD", DEFAULT_BANNER_URL, "https://t.me/Dimniy_Viborr"),
         )
     conn.commit()
     conn.close()
@@ -136,7 +136,7 @@ SHOP_CONFIG = {
     "twogis_review_url": "https://2gis.ru/moscow",
     # Основные кнопки под баннером
     "links": {
-        "telegram_catalog": {"title": "💨 Наличие и вкусы (Telegram)", "url": "https://t.me", "icon": "fa-brands fa-telegram"},
+        "telegram_catalog": {"title": "💨 Наличие и вкусы (Telegram)", "url": "https://t.me/Dimniy_Viborr", "icon": "fa-brands fa-telegram"},
     },
     # Блок «Связаться с нами» — единственное место, где живут контакты
     "contacts": {
@@ -184,7 +184,7 @@ async def landing_page(src: str = "direct"):
     buttons_html = ""
     for key, item in SHOP_CONFIG["links"].items():
         buttons_html += f'''
-        <a href="/go/{key}" class="glass flex items-center justify-between p-4 rounded-2xl hover:bg-slate-800/80 active:scale-98 transition">
+        <a href="/go/{key}" class="glass link-card flex items-center justify-between p-4 rounded-2xl">
             <span class="font-medium text-sm">{item["title"]}</span>
             <i class="{item["icon"]} text-lg text-pink-400"></i>
         </a>
