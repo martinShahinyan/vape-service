@@ -2,92 +2,160 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#050505">
     <title>Дымный выбор</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
     <style>
-        :root { --brand: #f20b78; --brand-light: #ff5b9f; }
+        :root { --brand: #f20b78; --brand-light: #ff5b9f; --brand-soft: #ffe5ef; }
+        html, body { background: #050505; }
         body {
-            background: radial-gradient(ellipse at 50% 0%, rgba(242,11,120,.20), transparent 48%), #050505;
-            color: #fff1f6; font-family: system-ui, sans-serif;
+            color: #fff1f6; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+            position: relative; overflow-x: hidden;
+            padding-top: max(1.5rem, env(safe-area-inset-top));
+            padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
         }
+
+        /* ---------- Анимированный фон ---------- */
+        .bg-stage { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none;
+            background: radial-gradient(ellipse at 50% 0%, rgba(242,11,120,.18), transparent 55%), #050505; }
+        .blob { position: absolute; border-radius: 50%; filter: blur(70px); opacity: .55; will-change: transform; }
+        .blob.b1 { width: 60vmax; height: 60vmax; left: -20vmax; top: -18vmax;
+            background: radial-gradient(circle, #f20b78, transparent 68%); animation: drift1 22s ease-in-out infinite alternate; }
+        .blob.b2 { width: 50vmax; height: 50vmax; right: -18vmax; top: 25vh;
+            background: radial-gradient(circle, #ff5b9f, transparent 68%); opacity: .38; animation: drift2 28s ease-in-out infinite alternate; }
+        .blob.b3 { width: 45vmax; height: 45vmax; left: 10vw; bottom: -22vmax;
+            background: radial-gradient(circle, #a30a55, transparent 68%); animation: drift3 26s ease-in-out infinite alternate; }
+        @keyframes drift1 { to { transform: translate3d(22vw, 16vh, 0) scale(1.15); } }
+        @keyframes drift2 { to { transform: translate3d(-24vw, -14vh, 0) scale(.9); } }
+        @keyframes drift3 { to { transform: translate3d(20vw, -12vh, 0) scale(1.2); } }
+        #smoke { position: absolute; inset: 0; width: 100%; height: 100%; }
+        .grain { position: absolute; inset: 0; opacity: .5;
+            background-image: radial-gradient(rgba(255,255,255,.05) 1px, transparent 1px); background-size: 3px 3px; }
+
+        .content { position: relative; z-index: 1; }
+
+        /* ---------- Элементы ---------- */
         .glass {
-            background: rgba(25,12,23,.88); backdrop-filter: blur(12px);
-            border: 1px solid rgba(255,91,159,.22);
-            box-shadow: 0 12px 40px rgba(0,0,0,.28);
+            background: rgba(25,12,23,.78); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+            border: 1px solid rgba(255,91,159,.24);
+            box-shadow: 0 12px 40px rgba(0,0,0,.32), inset 0 1px 0 rgba(255,255,255,.05);
         }
         .brand-button {
+            position: relative; overflow: hidden;
             background: linear-gradient(135deg,#f20b78,#ff4b91); color: white;
-            box-shadow: 0 8px 24px rgba(242,11,120,.22);
+            box-shadow: 0 8px 24px rgba(242,11,120,.28);
         }
         .brand-button:hover { filter: brightness(1.1); }
+        /* блик, пробегающий по главной кнопке */
+        .shine::after {
+            content: ""; position: absolute; top: 0; left: -60%; width: 40%; height: 100%;
+            background: linear-gradient(100deg, transparent, rgba(255,255,255,.35), transparent);
+            transform: skewX(-20deg); animation: shine 4.5s ease-in-out infinite;
+        }
+        @keyframes shine { 0%, 60% { left: -60%; } 100% { left: 130%; } }
+
+        .link-card { transition: transform .2s ease, border-color .2s ease, background .2s ease; }
+        .link-card:hover { border-color: rgba(255,91,159,.6); background: rgba(242,11,120,.14); transform: translateY(-2px); }
+        .link-card:active { transform: scale(.98); }
+
         .contact-link {
             display:flex; align-items:center; justify-content:center; gap:.7rem;
             width:100%; padding:.95rem 1rem; border-radius:1rem;
-            border:1px solid rgba(255,91,159,.28); background:rgba(242,11,120,.09);
+            border:1px solid rgba(255,91,159,.3); background:rgba(242,11,120,.1);
             color:#ffe5ef; font-weight:700; transition:.2s ease;
+            -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
         }
-        .contact-link:hover { background:rgba(242,11,120,.2); transform:translateY(-1px); }
+        .contact-link:hover { background:rgba(242,11,120,.24); transform:translateY(-1px); }
+        .contact-link:active { transform: scale(.98); }
         .contact-icon { color:#ff5b9f; font-size:1.15rem; }
+
         .logo-frame {
-            width: 100%; max-width: 280px; padding: 2px; border-radius: 1.5rem;
+            position: relative; width: 100%; max-width: 280px; padding: 2px; border-radius: 1.5rem;
             background: linear-gradient(135deg, #ff5b9f, #f20b78 45%, rgba(255,91,159,.25));
-            box-shadow: 0 0 0 1px rgba(255,91,159,.15), 0 14px 40px rgba(242,11,120,.28);
+            animation: glow 4s ease-in-out infinite;
+        }
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 0 1px rgba(255,91,159,.15), 0 14px 40px rgba(242,11,120,.28); }
+            50%      { box-shadow: 0 0 0 1px rgba(255,91,159,.3),  0 14px 60px rgba(242,11,120,.55); }
         }
         .logo-inner {
             border-radius: calc(1.5rem - 2px); padding: .9rem 1.1rem;
             background: radial-gradient(ellipse at 50% 0%, rgba(242,11,120,.16), transparent 70%), #0b0509;
         }
-        .swiper-pagination-bullet-active { background:var(--brand) !important; }
+        .logo-inner img { animation: floaty 6s ease-in-out infinite; }
+        @keyframes floaty { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+
+        .swiper-pagination-bullet { background: #fff !important; opacity: .5; }
+        .swiper-pagination-bullet-active { background: var(--brand) !important; opacity: 1; }
+
+        /* появление при загрузке: один общий каскад */
+        .rise { opacity: 0; transform: translateY(14px); animation: rise .7s cubic-bezier(.2,.7,.2,1) forwards; }
+        @keyframes rise { to { opacity: 1; transform: none; } }
+
+        @media (prefers-reduced-motion: reduce) {
+            .blob, .logo-frame, .logo-inner img, .shine::after { animation: none !important; }
+            .rise { animation: none; opacity: 1; transform: none; }
+            #smoke { display: none; }
+        }
     </style>
 </head>
-<body class="min-h-screen flex flex-col justify-between py-6 px-4">
-    <div id="ageGate" class="fixed inset-0 bg-slate-950/95 z-50 flex items-center justify-center p-4">
+<body class="min-h-screen flex flex-col justify-between px-4">
+    <div class="bg-stage" aria-hidden="true">
+        <div class="blob b1"></div>
+        <div class="blob b2"></div>
+        <div class="blob b3"></div>
+        <canvas id="smoke"></canvas>
+        <div class="grain"></div>
+    </div>
+
+    <div id="ageGate" class="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4" style="-webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);">
         <div class="glass max-w-sm w-full p-6 rounded-3xl text-center">
             <div class="w-14 h-14 rounded-full bg-pink-500/15 text-pink-300 flex items-center justify-center mx-auto mb-3 text-xl font-black">18+</div>
             <h2 class="text-lg font-bold mb-2">Подтвердите возраст</h2>
             <p class="text-xs text-slate-400 mb-6">Информация предназначена исключительно для совершеннолетних (18+).</p>
-            <button onclick="confirmAge()" class="w-full py-3 rounded-xl brand-button font-bold text-sm transition">Мне исполнилось 18 лет</button>
+            <button onclick="confirmAge()" class="w-full py-3 rounded-xl brand-button shine font-bold text-sm transition">Мне исполнилось 18 лет</button>
         </div>
     </div>
-    <div class="w-full max-w-md mx-auto">
-        <header class="text-center mb-6 pt-2">
+
+    <div class="content w-full max-w-md mx-auto">
+        <header class="text-center mb-6 pt-2 rise" style="animation-delay:.05s">
             <div class="logo-frame mx-auto mb-3">
                 <div class="logo-inner">
                     <img src="/static/logo.png" alt="Логотип сети магазинов Дымный выбор" class="block w-full h-auto object-contain">
                 </div>
             </div>
-            <p class="text-xs text-pink-200/60 mt-1">{{ shop.subtitle }}</p>
+            <p class="text-xs text-pink-200/70 mt-1">{{ shop.subtitle }}</p>
         </header>
 
-        <div class="swiper mySwiper rounded-2xl overflow-hidden mb-6 shadow-xl border border-pink-500/20">
+        <div class="swiper mySwiper rounded-2xl overflow-hidden mb-6 shadow-xl border border-pink-500/25 rise" style="animation-delay:.15s">
             <div class="swiper-wrapper">
                 <!-- BANNERS_PLACEHOLDER -->
             </div>
             <div class="swiper-pagination"></div>
         </div>
 
-        <button onclick="openReviewModal()" class="w-full mb-4 p-4 rounded-2xl brand-button text-white font-bold flex items-center justify-between shadow-lg active:scale-95 transition">
+        <button onclick="openReviewModal()" class="w-full mb-4 p-4 rounded-2xl brand-button shine text-white font-bold flex items-center justify-between shadow-lg active:scale-95 transition rise" style="animation-delay:.25s">
             <span class="flex items-center gap-3"><i class="fa-solid fa-location-dot text-xl"></i> Оценить магазин</span>
             <span class="text-pink-100 tracking-widest text-sm">★★★★★</span>
         </button>
 
-        <div id="shopButtons" class="space-y-3">
+        <div id="shopButtons" class="space-y-3 rise" style="animation-delay:.35s">
             <!-- BUTTONS_PLACEHOLDER -->
         </div>
 
-        <section class="mt-6 space-y-3">
-            <h2 class="text-center text-xs uppercase tracking-[.22em] text-pink-200/60">Связаться с нами</h2>
+        <section class="mt-6 space-y-3 rise" style="animation-delay:.45s">
+            <h2 class="text-center text-xs uppercase tracking-[.22em] text-pink-200/70">Связаться с нами</h2>
             <!-- CONTACTS_PLACEHOLDER -->
         </section>
     </div>
-    <footer class="max-w-md mx-auto mt-8 text-center text-[10px] text-pink-100/40">Дистанционная продажа никотинсодержащей продукции не осуществляется. 18+</footer>
+    <footer class="content max-w-md mx-auto mt-8 text-center text-[10px] text-pink-100/50">Дистанционная продажа никотинсодержащей продукции не осуществляется. 18+</footer>
 
     <div id="reviewModal" class="fixed inset-0 bg-black/85 hidden items-center justify-center p-4 z-40">
         <div class="glass w-full max-w-sm rounded-3xl p-6 text-center relative">
-            <button onclick="closeReviewModal()" class="absolute top-4 right-4 text-slate-400"><i class="fa-solid fa-xmark text-xl"></i></button>
+            <button onclick="closeReviewModal()" class="absolute top-4 right-4 text-slate-400" aria-label="Закрыть"><i class="fa-solid fa-xmark text-xl"></i></button>
             <h3 class="text-lg font-bold mb-1">Оцените обслуживание</h3>
             <p class="text-xs text-slate-300 mb-4">Нам важно ваше мнение</p>
             <div class="flex justify-center gap-2 text-3xl text-slate-600 mb-5" id="starContainer">
@@ -151,6 +219,59 @@
             msgBox.innerText = data.message;
             msgBox.classList.remove('hidden');
         }
+
+        // ---------- Дым: медленно поднимающиеся розовые клубы ----------
+        (function () {
+            if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+            const canvas = document.getElementById('smoke');
+            const ctx = canvas.getContext('2d');
+            let w, h, dpr, puffs = [], raf;
+            const small = () => window.innerWidth < 768;
+
+            function spawn(initial) {
+                const r = 40 + Math.random() * 90;
+                return {
+                    x: Math.random() * w,
+                    y: initial ? Math.random() * h : h + r,
+                    r: r,
+                    vy: 0.15 + Math.random() * 0.35,
+                    sway: Math.random() * Math.PI * 2,
+                    swaySpeed: 0.003 + Math.random() * 0.006,
+                    a: 0.05 + Math.random() * 0.09,
+                    hue: Math.random() < 0.7 ? '242,11,120' : '255,91,159'
+                };
+            }
+            function resize() {
+                dpr = Math.min(window.devicePixelRatio || 1, 2);
+                w = window.innerWidth; h = window.innerHeight;
+                canvas.width = w * dpr; canvas.height = h * dpr;
+                ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+                const n = small() ? 9 : 18;
+                puffs = Array.from({ length: n }, () => spawn(true));
+            }
+            function frame() {
+                ctx.clearRect(0, 0, w, h);
+                for (const p of puffs) {
+                    p.y -= p.vy;
+                    p.sway += p.swaySpeed;
+                    p.x += Math.sin(p.sway) * 0.35;
+                    p.r += 0.05;
+                    const fade = Math.min(1, Math.max(0, (p.y + p.r) / (h * 0.5)));
+                    const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r);
+                    g.addColorStop(0, 'rgba(' + p.hue + ',' + (p.a * fade) + ')');
+                    g.addColorStop(1, 'rgba(' + p.hue + ',0)');
+                    ctx.fillStyle = g;
+                    ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill();
+                    if (p.y + p.r < 0) Object.assign(p, spawn(false));
+                }
+                raf = requestAnimationFrame(frame);
+            }
+            resize(); frame();
+            let t; window.addEventListener('resize', () => { clearTimeout(t); t = setTimeout(resize, 200); });
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden) cancelAnimationFrame(raf); else frame();
+            });
+        })();
     </script>
 </body>
 </html>
